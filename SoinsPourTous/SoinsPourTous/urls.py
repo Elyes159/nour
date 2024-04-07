@@ -15,8 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from flutter_app.views import  create_account, login, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, slides, userData, verify_otp,password_reset_email , categories
-from mytestwebsite import settings
+from patient.views import  create_account, login, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, slides, userData, verify_otp,password_reset_email , categories
+from SoinsPourTous import settings
 from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),

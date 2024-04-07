@@ -7,8 +7,8 @@ from rest_framework.response import Response
 from django.template.loader import get_template
 from django.utils.html import strip_tags
 from django.template import Context
-from flutter_app.models import Otp, PasswordResetToken, Token
-from mytestwebsite.settings import TEMPLATES_BASE_URL
+from patient.models import Otp, PasswordResetToken, Token
+from SoinsPourTous.settings import TEMPLATES_BASE_URL
 from rest_framework.permissions import BasePermission
 from django.utils import timezone
 from twilio.rest import Client # type: ignore

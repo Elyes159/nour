@@ -4,8 +4,23 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group as DjangoGroup
 from secure import PermissionsPolicy
 from django.contrib.auth.hashers import make_password
+from django.core.validators import MinLengthValidator
 
 
+class Medecin( models.Model) : 
+    email = models.EmailField()
+    phone = models.CharField(max_length = 10) 
+    fullname = models.CharField(max_length = 50)
+    password = models.CharField(max_length = 5000)
+    created_at = models.DateTimeField(auto_now_add = True)
+    image = models.ImageField(upload_to='categories/')
+
+    def __str__(self) : 
+        return self.email
+    def update_password(self, new_password):
+        # Hasher le nouveau mot de passe avant la mise à jour
+        hashed_password = make_password(new_password)
+        User.objects.filter(pk=self.pk).update(password=hashed_password)
 
 class User( models.Model) : 
     email = models.EmailField()
@@ -49,7 +64,13 @@ class PasswordResetToken(models.Model) :
     def __str__(self) : 
         return self.user.email
     
-
+class Message(models.Model):
+    sender_user = models.ForeignKey(User, related_name='sent_user_messages', on_delete=models.CASCADE)
+    sender_medecin = models.ForeignKey(Medecin, related_name='sent_medecin_messages', on_delete=models.CASCADE)
+    receiver_user = models.ForeignKey(User, related_name='received_user_messages', on_delete=models.CASCADE)
+    receiver_medecin = models.ForeignKey(Medecin, related_name='received_medecin_messages', on_delete=models.CASCADE)
+    message = models.TextField(validators=[MinLengthValidator(1)])
+    timestamp = models.DateTimeField(auto_now_add=True)
 # class Category(models.Model) : 
 #     name = models.CharField(max_length=50)
 #     position = models.IntegerField(default = 0)

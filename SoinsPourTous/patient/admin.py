@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.admin import register
 
-from flutter_app.models import Category, Otp, PageItem, PasswordResetToken, Product, ProductImage, ProductOption, SLide, Token, User
+from patient.models import Category, Otp, PageItem, PasswordResetToken, Product, ProductImage, ProductOption, SLide, Token, User,Message
 # Register your models here.
 
 
@@ -22,6 +22,10 @@ class TokenAdmin(admin.ModelAdmin) :
 @register(PasswordResetToken)
 class PasswordResetTokenAdmin(admin.ModelAdmin) : 
     list_display=['token','user','created_at']
+    
+@register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ['sender_user', 'sender_medecin', 'receiver_user', 'receiver_medecin', 'message', 'timestamp']
 
 
 # @register(Category)

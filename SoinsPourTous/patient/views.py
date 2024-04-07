@@ -6,8 +6,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404,redirect
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from flutter_app.models import Category, Otp, PasswordResetToken, SLide, Token, User
-from flutter_app.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response
+from patient.models import Category, Otp, PasswordResetToken, SLide, Token, User
+from patient.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response
 from rest_framework.parsers import FormParser
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password,check_password
@@ -16,8 +16,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie,csrf_protect
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import get_template
 from django.template import loader
-from flutter_app.serializers import CategorySerializer, SLideSerializer, UserSerializer
-from mytestwebsite.settings import TEMPLATES_BASE_URL
+from patient.serializers import CategorySerializer, SLideSerializer, UserSerializer
+from SoinsPourTous.settings import TEMPLATES_BASE_URL
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated ,DjangoModelPermissions,AllowAny
 from rest_framework.decorators import api_view, authentication_classes, permission_classes

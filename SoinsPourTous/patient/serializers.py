@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
-from flutter_app.models import Category, PageItem, Product, ProductImage, ProductOption, SLide, User
+from patient.models import Category, PageItem, Product, ProductImage, ProductOption, SLide, User
 
 class UserSerializer(ModelSerializer) : 
     class Meta:
