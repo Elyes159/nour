@@ -56,7 +56,7 @@ class TokenForDoctor(models.Model) :
     created_at = models.DateTimeField(auto_now_add = True)
 
     def __str__(self) : 
-        return self.user.email
+        return self.user.username
     
 class PasswordResetToken(models.Model) : 
     token = models.CharField(max_length = 5000)

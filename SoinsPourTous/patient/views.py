@@ -189,13 +189,14 @@ def login(request):
     
     
     
-from .models import Medecin, Room  # Importez le modèle Medecin
+from .models import Medecin, Room, TokenForDoctor  # Importez le modèle Medecin
   
     
 @csrf_exempt 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def login_pour_medecin(request):
+
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -328,7 +329,9 @@ def room(request) :
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-def checkview(request):
+def checkview(request,token):
+    token = TokenForDoctor.objects.filter( token=token).exists()
+
     if request.method == 'POST':
         room_code = request.data.get('room_code')
         username_doctor = request.data.get('username_doctor')
@@ -354,7 +357,9 @@ from .models import Message
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-def send(request):
+def send(request,token):
+    token = TokenForDoctor.objects.filter( token=token).exists()
+
     if request.method == 'POST':
         message = request.data.get('message')
         username = request.data.get('username')
@@ -380,4 +385,14 @@ def send(request):
 
 
 
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getmessage(request, room,token):
+    token = TokenForDoctor.objects.filter( token=token).exists()
 
+    try:
+        room_details = Room.objects.get(code=room)
+        messages = Message.objects.filter(room=room_details.code).order_by('date')
+        return JsonResponse({'messages': list(messages.values())}, status=200)
+    except Room.DoesNotExist:
+        return JsonResponse({'error': 'La salle spécifiée n\'existe pas'}, status=404)
