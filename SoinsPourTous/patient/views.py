@@ -6,8 +6,8 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404,redirect
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from patient.models import Category, Otp, PasswordResetToken, SLide, Token, User
-from patient.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response
+from patient.models import  Otp, PasswordResetToken, Token, User1,Message
+from patient.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response, token_response_doctor
 from rest_framework.parsers import FormParser
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password,check_password
@@ -16,7 +16,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie,csrf_protect
 from django.views.decorators.csrf import csrf_exempt
 from django.template.loader import get_template
 from django.template import loader
-from patient.serializers import CategorySerializer, SLideSerializer, UserSerializer
+from patient.serializers import   UserSerializer
 from SoinsPourTous.settings import TEMPLATES_BASE_URL
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated ,DjangoModelPermissions,AllowAny
@@ -27,6 +27,7 @@ from datetime import timedelta
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth.decorators import login_required, permission_required
 
+from django.contrib.auth.models import  User
 
 
 
@@ -38,10 +39,10 @@ def request_otp(request):
     phone = request.data.get('phone')
 
     if email and phone:
-        if User.objects.filter(email=email).exists():
+        if User1.objects.filter(email=email).exists():
             return JsonResponse({'error': 'Email already exists'}, status=400)
 
-        if User.objects.filter(phone=phone).exists():
+        if User1.objects.filter(phone=phone).exists():
             return JsonResponse({'error': 'Phone already exists'}, status=400)
 
         return send_otp(phone)
@@ -133,7 +134,7 @@ def create_account(request):
                 # otp_obj = get_object_or_404(Otp, phone=phone, verified=True)
                 # print("houni : ",otp_obj)
                 # print(f"Found Otp: {otp_obj}")
-                User.objects.create(email=email, phone=phone, fullname=fullname, password=password)
+                User1.objects.create(email=email, phone=phone, fullname=fullname, password=password)
                 # otp_obj.delete()
                 return JsonResponse({"message": "account created successfully"})
             else:
@@ -169,22 +170,56 @@ def login(request):
     password = request.data.get('password')
 
     if email:
-        user = User.objects.filter(email=email).first()
+        user1 = User1.objects.filter(email=email).first()
         
-        password1 = user.password if user else None
+        password1 = user1.password if user1 else None
     elif phone:
-        user = User.objects.filter(phone=phone).first()
-        password1 = user.password if user else None
+        user1 = User1.objects.filter(phone=phone).first()
+        password1 = user1.password if user1 else None
     else:
         return JsonResponse({'error': 'data missing'}, status=400)
 
-    if user :
+    if user1 :
         if password == password1:
-            return token_response(user)
+            return token_response(user1)
         else :
             return JsonResponse({'response':'mdpincorrecte'})
     else:
         return JsonResponse({'error': 'incorrect password'}, status=400)
+    
+    
+    
+from .models import Medecin, Room  # Importez le modèle Medecin
+  
+    
+@csrf_exempt 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def login_pour_medecin(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if username:
+        user1 = Medecin.objects.filter(username=username).first()
+        
+        password1 = user1.password if user1 else None
+    
+    else:
+        return JsonResponse({'error': 'data missing'}, status=400)
+
+    if user1 :
+        if password == password1:
+            return token_response_doctor(user1)
+        else :
+            return JsonResponse({'response':'mdpincorrecte'})
+    else:
+        return JsonResponse({'error': 'incorrect password'}, status=400)
+    
+    
+    
+    
+    
+    
 @api_view(['GET', 'POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def password_reset_email(request):
@@ -197,8 +232,8 @@ def password_reset_email(request):
         if not email:
             return JsonResponse({'error': 'params_missing'}, status=400)
 
-        user = get_object_or_404(User, email=email)
-        send_password_reset_email(user)
+        user1 = get_object_or_404(User1, email=email)
+        send_password_reset_email(user1)
         return JsonResponse({'message': 'password_reset_email_sent'}, status=200)
     
     return JsonResponse({'error': 'Method Not Allowed'}, status=405)
@@ -206,7 +241,7 @@ def password_reset_email(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def password_reset_form(request, email, token):
-    token_instance = PasswordResetToken.objects.filter(user__email=email, token=token).first()
+    token_instance = PasswordResetToken.objects.filter(user1__email=email, token=token).first()
     link_expired = loader.get_template('pages/link-expired.html').render()
 
     if token_instance:
@@ -231,7 +266,7 @@ def password_reset_confirm(request, email, token):
     password1 = request.data.get('password1')
     password2 = request.data.get('password2')
     print(password1)
-    token_instance = PasswordResetToken.objects.filter(user__email=email, token=token).first()
+    token_instance = PasswordResetToken.objects.filter(user1__email=email, token=token).first()
     link_expired = get_template('pages/link-expired.html').render()
     if token_instance:
         if datetime.datetime.utcnow() < token_instance.validity.replace(tzinfo=None):
@@ -245,10 +280,10 @@ def password_reset_confirm(request, email, token):
 
             if password1 == password2:
                 link_success = get_template('pages/password-updated.html').render()
-                user = token_instance.user
-                User.objects.filter(email=user.email).update(password=password1)
+                user1 = token_instance.user1
+                User1.objects.filter(email=user1.email).update(password=password1)
                 token_instance.delete()
-                Token.objects.filter(user=user).delete()
+                Token.objects.filter(user1=user1).delete()
                 return HttpResponse(link_success)
             else:
                 return render(request, 'pages/new-password-form.html', {
@@ -270,34 +305,79 @@ def password_updated(request) :
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 @permission_classes([IsAuthenticated])
 @login_required
-def userData(request):
-    print("Vue userData atteinte")
-    if request.user.is_authenticated:
-        user = request.user
-        print("houni : ",user)
-        # Vous pouvez adapter cette logique en fonction de votre modèle User
+def user1Data(request):
+    print("Vue user1Data atteinte")
+    if request.user1.is_authenticated:
+        user1 = request.user1
+        print("houni : ",user1)
+        # Vous pouvez adapter cette logique en fonction de votre modèle User1
         data = {
-            'email': user.email,
-            'fullname': user.fullname,
-            'phone': user.phone,
+            'email': user1.email,
+            'fullname': user1.fullname,
+            'phone': user1.phone,
             # Ajoutez d'autres champs si nécessaire
         }
 
         return JsonResponse(data)
     else:
-        return JsonResponse({'detail': 'User not authenticated'}, status=401)
-# @api_view(['GET'])
-# @authentication_classes([SessionAuthentication, BasicAuthentication]) 
-# def categories(request) : 
-#     list = Category.objects.all().order_by('position')
-#     data = CategorySerializer(list,many=True).data
-#     return Response(data)
+        return JsonResponse({'detail': 'User1 not authenticated'}, status=401)
+    
+    
+def room(request) : 
+    pass
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def checkview(request):
+    if request.method == 'POST':
+        room_code = request.data.get('room_code')
+        username_doctor = request.data.get('username_doctor')
+        if room_code and username_doctor:
+            if Room.objects.filter(code=room_code).exists() and Medecin.objects.filter(username = username_doctor).exists():
+                return JsonResponse({'message': 'Bienvenue dans votre chat'}, status=200)
+            elif (Medecin.objects.filter(username = username_doctor).exists() and not(Room.objects.filter(code=room_code).exists())):
+                new_room = Room.objects.create(code=room_code)
+                new_room.save()
+                return JsonResponse({'message': 'Un nouveau chat créé'}, status=200)
+            else : 
+                return JsonResponse({'erreurre': 'docteur nexiste pas'}, status=200)
+
+        else:
+            return JsonResponse({'message': 'Code de salle non fourni'}, status=400)
+    else:
+        return JsonResponse({'message': 'Méthode non autorisée'}, status=405)
+    
+    
+from django.http import JsonResponse
+from .models import Message
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def send(request):
+    if request.method == 'POST':
+        message = request.data.get('message')
+        username = request.data.get('username')
+        room_code = request.data.get('room_code')
+        
+        if message and username and room_code:
+            # Vérifier si le username appartient à un utilisateur ou à un médecin
+            if (User1.objects.filter(username=username).exists() or Medecin.objects.filter(username=username).exists()) and Room.objects.filter(code = room_code).exists():
+                # Créez un nouvel objet Message avec les données fournies
+                user_type = 'patient' if User1.objects.filter(username=username).exists() else 'medecin'
+                
+                # Créer un nouvel objet Message avec les données fournies
+                new_message = Message.objects.create(value=message, user=f'{username}-{user_type}', room=room_code)
+                new_message.save()
+                
+                return JsonResponse({'message': 'Message envoyé avec succès'}, status=201)
+            else:
+                return JsonResponse({'error': 'Nom d\'utilisateur invalide'}, status=400)
+        else:
+            return JsonResponse({'error': 'Données manquantes'}, status=400)
+    else:
+        return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
 
 
 
-# @api_view(['GET'])
-# @authentication_classes([SessionAuthentication, BasicAuthentication]) 
-# def slides(request) : 
-#     list = SLide.objects.all().order_by('position')
-#     data = SLideSerializer(list,many=True).data
-#     return Response(data)
+

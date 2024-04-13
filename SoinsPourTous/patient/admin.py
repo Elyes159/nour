@@ -1,14 +1,24 @@
+from typing import __all__
 from django.contrib import admin
 from django.contrib.admin import register
 
-from patient.models import Category, Otp, PageItem, PasswordResetToken, Product, ProductImage, ProductOption, SLide, Token, User,Message
+from patient.models import  Medecin, Otp, PasswordResetToken,  Token, TokenForDoctor, User1,Message,Room
 # Register your models here.
 
 
 
-@register(User)
+@register(User1)
 class UserAdmin(admin.ModelAdmin):
     list_display = ['email','phone','fullname','created_at']
+
+    
+    
+    
+    
+    
+@register(Medecin)
+class MedecinAdmin(admin.ModelAdmin) : 
+    list_display = ['id','username']
 
 @register(Otp)
 class OtpAdmin(admin.ModelAdmin) : 
@@ -17,15 +27,29 @@ class OtpAdmin(admin.ModelAdmin) :
 @register(Token)
 class TokenAdmin(admin.ModelAdmin) : 
     list_display = ['token','user','created_at']
+    
+    
+@register(TokenForDoctor)
+class TokenAdmin(admin.ModelAdmin) : 
+    list_display = ['token','user','created_at']
 
 
 @register(PasswordResetToken)
 class PasswordResetTokenAdmin(admin.ModelAdmin) : 
     list_display=['token','user','created_at']
     
+    
 @register(Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = ['sender_user', 'sender_medecin', 'receiver_user', 'receiver_medecin', 'message', 'timestamp']
+    list_display = ['value','date','user','room']
+    
+
+@register(Room)
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ['code']
+# @register(Message)
+# class MessageAdmin(admin.ModelAdmin):
+#     list_display = ['sender_user', 'sender_medecin', 'receiver_user', 'receiver_medecin', 'message', 'timestamp']
 
 
 # @register(Category)

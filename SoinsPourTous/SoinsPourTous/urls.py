@@ -1,4 +1,4 @@
-"""mytestwebsite URL Configuration
+"""SoinsPourTous URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/3.2/topics/http/urls/
@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from patient.views import  create_account, login, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, slides, userData, verify_otp,password_reset_email , categories
+from patient.views import  checkview, create_account, login, login_pour_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, user1Data, verify_otp,password_reset_email ,send
 from SoinsPourTous import settings
 from django.conf.urls.static import static
 urlpatterns = [
@@ -30,9 +30,10 @@ urlpatterns = [
     path('login/',login,name='login'),
     path('password_reset_confirm/<email>/<token>',password_reset_confirm,name='password_reset_confirm'),
     path('password_updated/', password_updated, name='password_updated'),
-    path('userdata/',userData,name='userdata'),
-    path('categories/',categories,name='categories'),
-    path('slides/',slides,name='slides'),
+    path('userdata/',user1Data,name='userdata'),
+    path('medecinlogin/',login_pour_medecin),
+    path('checkview/', checkview, name='checkview'),
+    path('send/', send, name='send'),
 
 
 ]

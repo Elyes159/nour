@@ -1,30 +1,24 @@
 import uuid
 from django.utils import timezone  # Assurez-vous d'importer correctement le module timezone
 from django.db import models
-from django.contrib.auth.models import AbstractUser, Group as DjangoGroup
+from django.contrib.auth.models import  User
 from secure import PermissionsPolicy
 from django.contrib.auth.hashers import make_password
 from django.core.validators import MinLengthValidator
+from datetime import datetime
 
 
-class Medecin( models.Model) : 
+class Medecin(models.Model):
+    # Pas besoin de définir manuellement une colonne 'id'
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=5000)
+
+
+class User1( models.Model) : 
+    username = models.CharField(max_length=50)
+
     email = models.EmailField()
-    phone = models.CharField(max_length = 10) 
-    fullname = models.CharField(max_length = 50)
-    password = models.CharField(max_length = 5000)
-    created_at = models.DateTimeField(auto_now_add = True)
-    image = models.ImageField(upload_to='categories/')
-
-    def __str__(self) : 
-        return self.email
-    def update_password(self, new_password):
-        # Hasher le nouveau mot de passe avant la mise à jour
-        hashed_password = make_password(new_password)
-        User.objects.filter(pk=self.pk).update(password=hashed_password)
-
-class User( models.Model) : 
-    email = models.EmailField()
-    phone = models.CharField(max_length = 10) 
+    phone = models.CharField(max_length = 10)
     fullname = models.CharField(max_length = 50)
     password = models.CharField(max_length = 5000)
     created_at = models.DateTimeField(auto_now_add = True)
@@ -55,6 +49,15 @@ class Token(models.Model) :
     def __str__(self) : 
         return self.user.email
     
+    
+class TokenForDoctor(models.Model) : 
+    token = models.CharField(max_length = 5000)
+    user = models.ForeignKey(Medecin, on_delete= models.CASCADE,related_name="tokens_set")
+    created_at = models.DateTimeField(auto_now_add = True)
+
+    def __str__(self) : 
+        return self.user.email
+    
 class PasswordResetToken(models.Model) : 
     token = models.CharField(max_length = 5000)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
@@ -64,75 +67,18 @@ class PasswordResetToken(models.Model) :
     def __str__(self) : 
         return self.user.email
     
+    
+class Room (models.Model) : 
+    code = models.CharField(max_length=100)
+    
 class Message(models.Model):
-    sender_user = models.ForeignKey(User, related_name='sent_user_messages', on_delete=models.CASCADE)
-    sender_medecin = models.ForeignKey(Medecin, related_name='sent_medecin_messages', on_delete=models.CASCADE)
-    receiver_user = models.ForeignKey(User, related_name='received_user_messages', on_delete=models.CASCADE)
-    receiver_medecin = models.ForeignKey(Medecin, related_name='received_medecin_messages', on_delete=models.CASCADE)
-    message = models.TextField(validators=[MinLengthValidator(1)])
-    timestamp = models.DateTimeField(auto_now_add=True)
-# class Category(models.Model) : 
-#     name = models.CharField(max_length=50)
-#     position = models.IntegerField(default = 0)
-#     image = models.ImageField(upload_to='categories/')
-#     def __str__(self) : 
-#         return self.name
+    value = models.CharField(max_length=1000000)
+    date = models.DateTimeField(default=datetime.now , blank = True)
+    user = models.CharField(max_length=1000000)
+    room = models.CharField(max_length=1000000)
+
+
     
 
-# class SLide(models.Model) : 
-#     position = models.IntegerField(default = 0)
-#     image = models.ImageField(upload_to='categories/')
-
-# class Product(models.Model) : 
-#     id = models.UUIDField(primary_key=True,default = uuid.uuid4,editable=False ) 
-#     category = models.ForeignKey(Category,on_delete = models.CASCADE,related_name = 'products_set')
-#     title = models.CharField(max_length= 500)
-#     description = models.TextField(max_length = 100000)
-#     price = models.IntegerField(default = 0)
-#     offer_price = models.IntegerField(default = 0)
-#     delivery_charge = models.IntegerField(default = 0)
-#     star_5 = models.IntegerField(default = 0)
-#     star_4 = models.IntegerField(default = 0)
-#     star_3 = models.IntegerField(default = 0)
-#     star_2 = models.IntegerField(default = 0)
-#     star_1 = models.IntegerField(default = 0)
-#     cod = models.BooleanField(default = False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-
-#     def __str__(self) : 
-#         return self.title
-    
-
-# class ProductOption(models.Model) : 
-#     id = models.UUIDField(primary_key=True,default = uuid.uuid4,editable=False ) 
-#     product = models.ForeignKey(Product,on_delete = models.CASCADE,related_name='options_set')
-#     option = models.CharField(max_length = 50)
-#     quantity = models.IntegerField(default = 0)
-
-#     def __str__(self) : 
-#         return f"({self.option})  {self.product.title}"
-    
-
-# class ProductImage(models.Model) : 
-#     position = models.IntegerField(default=0)
-#     image = models.ImageField(upload_to='products/')
-#     product_option = models.ForeignKey(ProductOption,on_delete = models.CASCADE,related_name='product_images_set')
-
-# class PageItem(models.Model) : 
-#     position = models.IntegerField
-#     image = models.ImageField(upload_to='product/')
-#     category = models.ForeignKey(Category,on_delete = models.CASCADE,related_name = 'pageitems_set')
-#     choices = [
-#         (1,'BANNER'),
-#         (2,'SWIPER'),
-#         (3,'GRID'),
-#     ]
-#     viewtype = models.IntegerField(choices = choices)
-#     title = models.CharField(max_length = 50)
-#     product_options = models.ManyToManyField(ProductOption,blank=True)
-
-#     def __str__(self) : 
-#         return self.category.name
 
 
