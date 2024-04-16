@@ -32,8 +32,8 @@ urlpatterns = [
     path('password_updated/', password_updated, name='password_updated'),
     path('userdata/',user1Data,name='userdata'),
     path('medecinlogin/',login_pour_medecin),
-    path('<token>/checkview/', checkview, name='checkview'),
-    path('<token>/send/', send, name='send'),
+    path('<token>/<username>/checkview/', checkview, name='checkview'),
+    path('<token>/<username>/<room_code>/send/', send, name='send'),
     path('<token>/getMessage/<str:room>/', getmessage),
 
 

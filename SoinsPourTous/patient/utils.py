@@ -77,11 +77,13 @@ def token_response_doctor(user):
 from django.core.mail import send_mail
 
 def send_password_reset_email(user):
+    print(type(user))  # Vérifiez le type de l'objet user
+
     token = new_token()
     exp_time = timezone.now() + timezone.timedelta(minutes=10)
-
+    print("gouni")
     PasswordResetToken.objects.update_or_create(user=user, defaults={'user': user, 'token': token, 'validity': exp_time})
-
+    print("gouni")
     email_data = {
         'token': token,
         'email': user.email,

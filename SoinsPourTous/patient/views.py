@@ -196,7 +196,7 @@ from .models import Medecin, Room, TokenForDoctor  # Importez le modèle Medecin
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def login_pour_medecin(request):
-
+    print("bfab5c9efb8011eea494845cf3a65946")
     username = request.data.get('username')
     password = request.data.get('password')
 
@@ -225,7 +225,6 @@ def login_pour_medecin(request):
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def password_reset_email(request):
     if request.method == 'GET':
-        # Logique pour gérer la méthode GET (afficher un formulaire, par exemple)
         return render(request, 'emails/reset-password.html')
     
     elif request.method == 'POST':
@@ -233,7 +232,8 @@ def password_reset_email(request):
         if not email:
             return JsonResponse({'error': 'params_missing'}, status=400)
 
-        user1 = get_object_or_404(User1, email=email)
+        user1 = User1.objects.filter(email=email).first()
+        
         send_password_reset_email(user1)
         return JsonResponse({'message': 'password_reset_email_sent'}, status=200)
     
@@ -242,7 +242,7 @@ def password_reset_email(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def password_reset_form(request, email, token):
-    token_instance = PasswordResetToken.objects.filter(user1__email=email, token=token).first()
+    token_instance = PasswordResetToken.objects.filter(user__email=email, token=token).first()
     link_expired = loader.get_template('pages/link-expired.html').render()
 
     if token_instance:
@@ -267,7 +267,8 @@ def password_reset_confirm(request, email, token):
     password1 = request.data.get('password1')
     password2 = request.data.get('password2')
     print(password1)
-    token_instance = PasswordResetToken.objects.filter(user1__email=email, token=token).first()
+    
+    token_instance = PasswordResetToken.objects.filter(user__email=email, token=token).first()
     link_expired = get_template('pages/link-expired.html').render()
     if token_instance:
         if datetime.datetime.utcnow() < token_instance.validity.replace(tzinfo=None):
@@ -281,10 +282,10 @@ def password_reset_confirm(request, email, token):
 
             if password1 == password2:
                 link_success = get_template('pages/password-updated.html').render()
-                user1 = token_instance.user1
+                user1 = token_instance.user
                 User1.objects.filter(email=user1.email).update(password=password1)
                 token_instance.delete()
-                Token.objects.filter(user1=user1).delete()
+                Token.objects.filter(user=user1).delete()
                 return HttpResponse(link_success)
             else:
                 return render(request, 'pages/new-password-form.html', {
@@ -329,16 +330,14 @@ def room(request) :
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-def checkview(request,token):
-    token = TokenForDoctor.objects.filter( token=token).exists()
-
+def checkview(request,token,username):
+    token = TokenForDoctor.objects.filter( token=token, user__username = username ).exists()
     if request.method == 'POST':
         room_code = request.data.get('room_code')
-        username_doctor = request.data.get('username_doctor')
-        if room_code and username_doctor:
-            if Room.objects.filter(code=room_code).exists() and Medecin.objects.filter(username = username_doctor).exists():
+        if room_code and username and token:
+            if Room.objects.filter(code=room_code).exists() and Medecin.objects.filter(username = username).exists():
                 return JsonResponse({'message': 'Bienvenue dans votre chat'}, status=200)
-            elif (Medecin.objects.filter(username = username_doctor).exists() and not(Room.objects.filter(code=room_code).exists())):
+            elif (Medecin.objects.filter(username = username).exists() and not(Room.objects.filter(code=room_code).exists())):
                 new_room = Room.objects.create(code=room_code)
                 new_room.save()
                 return JsonResponse({'message': 'Un nouveau chat créé'}, status=200)
@@ -357,15 +356,13 @@ from .models import Message
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
-def send(request,token):
-    token = TokenForDoctor.objects.filter( token=token).exists()
+def send(request,token,username,room_code):
+    token = TokenForDoctor.objects.filter(token=token , user__username=username).exists() if token else Token.objects.filter(token=token,user__username=username).exists()
 
     if request.method == 'POST':
         message = request.data.get('message')
-        username = request.data.get('username')
-        room_code = request.data.get('room_code')
         
-        if message and username and room_code:
+        if message and username and room_code and token:
             # Vérifier si le username appartient à un utilisateur ou à un médecin
             if (User1.objects.filter(username=username).exists() or Medecin.objects.filter(username=username).exists()) and Room.objects.filter(code = room_code).exists():
                 # Créez un nouvel objet Message avec les données fournies

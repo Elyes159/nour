@@ -1,7 +1,6 @@
 import uuid
 from django.utils import timezone  # Assurez-vous d'importer correctement le module timezone
 from django.db import models
-from django.contrib.auth.models import  User
 from secure import PermissionsPolicy
 from django.contrib.auth.hashers import make_password
 from django.core.validators import MinLengthValidator
@@ -10,14 +9,15 @@ from datetime import datetime
 
 class Medecin(models.Model):
     # Pas besoin de définir manuellement une colonne 'id'
-    username = models.CharField(max_length=50)
+    username = models.CharField(max_length=50,unique=True)
     password = models.CharField(max_length=5000)
 
 
 class User1( models.Model) : 
+    email = models.EmailField(unique=True)
+
     username = models.CharField(max_length=50)
 
-    email = models.EmailField()
     phone = models.CharField(max_length = 10)
     fullname = models.CharField(max_length = 50)
     password = models.CharField(max_length = 5000)
@@ -29,7 +29,7 @@ class User1( models.Model) :
     def update_password(self, new_password):
         # Hasher le nouveau mot de passe avant la mise à jour
         hashed_password = make_password(new_password)
-        User.objects.filter(pk=self.pk).update(password=hashed_password)
+        User1.objects.filter(pk=self.pk).update(password=hashed_password)
         
 class Otp(models.Model) : 
     phone = models.CharField(max_length = 10)
@@ -43,7 +43,7 @@ class Otp(models.Model) :
 
 class Token(models.Model) : 
     token = models.CharField(max_length = 5000)
-    user = models.ForeignKey(User, on_delete= models.CASCADE,related_name="tokens_set")
+    user = models.ForeignKey(User1, on_delete= models.CASCADE,related_name="tokens_set")
     created_at = models.DateTimeField(auto_now_add = True)
 
     def __str__(self) : 
@@ -60,7 +60,7 @@ class TokenForDoctor(models.Model) :
     
 class PasswordResetToken(models.Model) : 
     token = models.CharField(max_length = 5000)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_tokens')
+    user = models.ForeignKey(User1, on_delete=models.CASCADE, related_name='password_reset_tokens')
     validity = models.DateTimeField(default=timezone.now) 
     created_at = models.DateTimeField(auto_now_add = True)
 
@@ -69,7 +69,7 @@ class PasswordResetToken(models.Model) :
     
     
 class Room (models.Model) : 
-    code = models.CharField(max_length=100)
+    code = models.CharField(max_length=100,unique=True)
     
 class Message(models.Model):
     value = models.CharField(max_length=1000000)
