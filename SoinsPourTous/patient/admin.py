@@ -2,7 +2,7 @@ from typing import __all__
 from django.contrib import admin
 from django.contrib.admin import register
 
-from patient.models import  Medecin, Otp, PasswordResetToken,  Token, TokenForDoctor, User1,Message,Room
+from patient.models import  Agent, Medecin, Otp, PageAcceuil, PasswordResetToken, RendezVous,  Token, TokenForAgent, TokenForDoctor, User1,Message,Room
 # Register your models here.
 
 
@@ -10,11 +10,10 @@ from patient.models import  Medecin, Otp, PasswordResetToken,  Token, TokenForDo
 @register(User1)
 class UserAdmin(admin.ModelAdmin):
     list_display = ['email','phone','fullname','created_at']
+@register(RendezVous)
+class RAdmin(admin.ModelAdmin):
+    list_display = ['date_rendez_vous','medecin','patient']
 
-    
-    
-    
-    
     
 @register(Medecin)
 class MedecinAdmin(admin.ModelAdmin) : 
@@ -34,6 +33,11 @@ class TokenAdmin(admin.ModelAdmin) :
     list_display = ['token','user','created_at']
 
 
+@register(TokenForAgent)
+class TokenAdmin(admin.ModelAdmin) : 
+    list_display = ['token','user','created_at']
+
+
 @register(PasswordResetToken)
 class PasswordResetTokenAdmin(admin.ModelAdmin) : 
     list_display=['token','user','created_at']
@@ -47,20 +51,14 @@ class MessageAdmin(admin.ModelAdmin):
 @register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ['code']
-# @register(Message)
-# class MessageAdmin(admin.ModelAdmin):
-#     list_display = ['sender_user', 'sender_medecin', 'receiver_user', 'receiver_medecin', 'message', 'timestamp']
 
+@register(Agent)
+class RoomAdmin(admin.ModelAdmin):
+    list_display = ['username','password']
 
-# @register(Category)
-# class CategoryAdmin(admin.ModelAdmin):
-#     list_display  = ['name','position','image']
-
-# @register(SLide)
-# class CategoryAdmin(admin.ModelAdmin):
-#     list_display  = ['position','image']
-
-
+@register(PageAcceuil)
+class PageAcceuilAdmin(admin.ModelAdmin):
+    list_display = ['postwithimage','postwithtet']
 
 # class ProductOptionInline(admin.TabularInline) : 
 #     list  = ['id','product','option','quantity']

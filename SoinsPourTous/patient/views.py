@@ -2,12 +2,12 @@ import datetime
 import json
 import logging
 from random import randint
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404,redirect
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from patient.models import  Otp, PasswordResetToken, Token, User1,Message
-from patient.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response, token_response_doctor
+from patient.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response, token_response_Agent, token_response_doctor
 from rest_framework.parsers import FormParser
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password,check_password
@@ -189,7 +189,7 @@ def login(request):
     
     
     
-from .models import Medecin, Room, TokenForDoctor  # Importez le modèle Medecin
+from .models import Agent, Medecin, PageAcceuil, RendezVous, Room, TokenForAgent, TokenForDoctor  # Importez le modèle Medecin
   
     
 @csrf_exempt 
@@ -218,9 +218,56 @@ def login_pour_medecin(request):
     
     
     
+@csrf_exempt 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def login_pour_agent(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if username:
+        user1 = Agent.objects.filter(username=username).first()
+        
+        password1 = user1.password if user1 else None
     
+    else:
+        return JsonResponse({'error': 'data missing'}, status=400)
+
+    if user1 :
+        if password == password1:
+            return token_response_Agent(user1)
+        else :
+            return JsonResponse({'response':'mdpincorrecte'})
+    else:
+        return JsonResponse({'error': 'incorrect password'}, status=400)
     
-    
+
+@csrf_exempt 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def ajout_rendez_vous_par_agent(request , token) : 
+        token = TokenForAgent.objects.filter(token=token).first()
+        if request.method == 'POST':
+            date_de_rdv = request.data.get('date_de_rdv')
+            medecin = request.data.get('medecin')
+            patient = request.data.get('patient')
+            dateExist = RendezVous.objects.filter(date_rendez_vous = date_de_rdv)
+            medecinExist = Medecin.objects.filter(username = medecin).exists()
+            patientExist = User1.objects.filter(username = patient)
+            
+            if not(dateExist) and patientExist and medecinExist : 
+               rdv =  RendezVous.objects.create(date_rendez_vous = date_de_rdv,patient = patient , medecin = medecin)
+               rdv.save()
+               return JsonResponse({'success': 'Rendez-vous ajouté avec succès'}, status=201)
+
+            elif dateExist and patientExist and medecinExist : 
+                return JsonResponse({'erreur rendez-vous': 'Rendez vous avec ce medecin et ce patient existe déja'}, status=400)
+            else : 
+                return JsonResponse({'Donnee erreur ': 'Il y a quelque donnees manquante'}, status=400)
+        else : 
+            return JsonResponse({"error": "Invalid request method"}, status=405)
+
+                
 @api_view(['GET', 'POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def password_reset_email(request):
@@ -393,3 +440,128 @@ def getmessage(request, room,token):
         return JsonResponse({'messages': list(messages.values())}, status=200)
     except Room.DoesNotExist:
         return JsonResponse({'error': 'La salle spécifiée n\'existe pas'}, status=404)
+
+
+
+from django.http import HttpResponse, JsonResponse
+from rest_framework.decorators import api_view
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
+from .models import PageAcceuil
+
+import base64
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getPageAcceuil(request, token):
+    token_obj = TokenForDoctor.objects.filter(token=token).exists() if token else Token.objects.filter(token=token).exists()
+    if request.method == 'GET':
+        if token_obj:
+            page_acceuil_data = PageAcceuil.objects.values()  # Obtenir toutes les données
+            for data in page_acceuil_data:
+                postwithimage_path = data['postwithimage']
+                with open(postwithimage_path, "rb") as image_file:
+                    encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+                data['postwithimage'] = encoded_string  # Remplacer le chemin d'accès par la représentation base64
+            return JsonResponse(list(page_acceuil_data), safe=False)  # Renvoyer les données au format JSON
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+        
+        
+        
+from django.http import JsonResponse
+import base64
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getProfilePatient(request, token):
+    token_obj = Token.objects.filter(token=token).first()
+    if request.method == 'GET':
+        if token_obj:
+            user_obj = token_obj.user
+            username_patient = user_obj.username
+            email_patient = user_obj.email
+            phone_patient = user_obj.phone
+            fullname_patient = user_obj.fullname
+            image_path = user_obj.image.path
+            with open(image_path, "rb") as image_file:
+                encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            user_data = {
+                'username': username_patient,
+                'email': email_patient,
+                'phone': phone_patient,
+                'fullname': fullname_patient,
+                'image': encoded_string
+            }
+
+            # Retour des données sous forme de réponse JSON
+            return JsonResponse(user_data)
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+        
+        
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getProfileDoctor(request, token):
+    token_obj = TokenForDoctor.objects.filter(token=token).first()
+    if request.method == 'GET':
+        if token_obj:
+            user_obj = token_obj.user
+       
+            username_patient = user_obj.username
+
+            
+            user_data = {
+                'username': username_patient,
+            }
+
+            # Retour des données sous forme de réponse JSON
+            return JsonResponse(user_data)
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+        
+        
+        
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getRendezVousDoctor(request, token):
+    token_obj = TokenForDoctor.objects.filter(token=token).first()
+    if request.method == 'GET':
+        if token_obj:
+            user_obj = token_obj.user
+            username_medecin = user_obj.username
+            date_rdv = RendezVous.objects.filter(medecin = username_medecin )
+            user_data = {
+                'username': username_medecin,
+                'date_rdv' : date_rdv
+            }
+            return JsonResponse(user_data)
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+        
+        
+        
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getRendezVousPatient(request, token):
+    token_obj = Token.objects.filter(token=token).first()
+    if request.method == 'GET':
+        if token_obj:
+            user_obj = token_obj.user
+            username_patient = user_obj.username
+            date_rdv = RendezVous.objects.filter(patient = username_patient )
+            user_data = {
+                'username': username_patient,
+                'date_rdv' : date_rdv
+            }
+            return JsonResponse(user_data)
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+
+            
+    
+
+
+
+
+    
+    

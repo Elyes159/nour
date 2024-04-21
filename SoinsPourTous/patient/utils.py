@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from django.template.loader import get_template
 from django.utils.html import strip_tags
 from django.template import Context
-from patient.models import Otp, PasswordResetToken, Token, TokenForDoctor
+from patient.models import Otp, PasswordResetToken, Token, TokenForAgent, TokenForDoctor
 from SoinsPourTous.settings import TEMPLATES_BASE_URL
 from rest_framework.permissions import BasePermission
 from django.utils import timezone
@@ -67,6 +67,19 @@ def token_response_doctor(user):
     TokenForDoctor.objects.create(token=token, user=user) 
     response_data = {
         'message': 'login successful',
+        'token': token,
+        'username' : user.username,
+        
+    }
+    print(token)
+
+    return JsonResponse(response_data)
+
+def token_response_Agent(user):
+    token = new_token()
+    TokenForAgent.objects.create(token=token, user=user) 
+    response_data = {
+        'message': 'login successful for Agent',
         'token': token,
         'username' : user.username,
         

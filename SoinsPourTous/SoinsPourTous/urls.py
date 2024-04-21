@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from patient.views import  checkview, create_account, getmessage, login, login_pour_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, user1Data, verify_otp,password_reset_email ,send
+from patient.views import  ajout_rendez_vous_par_agent, checkview, create_account, getProfileDoctor, getProfilePatient, getmessage, login, login_pour_agent, login_pour_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, user1Data, verify_otp,password_reset_email ,send,getPageAcceuil
 from SoinsPourTous import settings
 from django.conf.urls.static import static
 urlpatterns = [
@@ -35,7 +35,12 @@ urlpatterns = [
     path('<token>/<username>/checkview/', checkview, name='checkview'),
     path('<token>/<username>/<room_code>/send/', send, name='send'),
     path('<token>/getMessage/<str:room>/', getmessage),
-
+    path('agentlogin/',login_pour_agent),
+    path('ajoutRendezVousParAgent/<token>/',ajout_rendez_vous_par_agent),
+    path('getpageacceuil/<str:token>/',getPageAcceuil),
+    path('getProfilePatient/<token>/',getProfilePatient),
+    path('getProfileDoctor/<token>/',getProfileDoctor)
+    
 
 ]
 

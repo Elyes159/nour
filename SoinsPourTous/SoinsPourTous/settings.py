@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'corsheaders',
 ]
 
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -127,8 +128,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT= os.path.join(BASE_DIR,'media')
+MEDIA_URL = '/categories/'
+MEDIA_ROOT= os.path.join(BASE_DIR,'')
 
 
 # Default primary key field type

@@ -58,6 +58,8 @@ class TokenForDoctor(models.Model) :
     def __str__(self) : 
         return self.user.username
     
+
+    
 class PasswordResetToken(models.Model) : 
     token = models.CharField(max_length = 5000)
     user = models.ForeignKey(User1, on_delete=models.CASCADE, related_name='password_reset_tokens')
@@ -76,7 +78,32 @@ class Message(models.Model):
     date = models.DateTimeField(default=datetime.now , blank = True)
     user = models.CharField(max_length=1000000)
     room = models.CharField(max_length=1000000)
+    
 
+class PageAcceuil(models.Model) : 
+    postwithimage = models.ImageField(upload_to='categories/')
+    postwithtet = models.CharField(max_length=1000)
+    
+    
+class RendezVous(models.Model) : 
+    date_rendez_vous = models.DateField()
+    patient = models.CharField(max_length =  100)
+    medecin = models.CharField(max_length =  100)
+
+
+    
+class Agent(models.Model) : 
+    username = models.CharField(max_length=50)
+    password = models.CharField(max_length=1000)
+
+
+class TokenForAgent(models.Model) : 
+    token = models.CharField(max_length = 5000)
+    user = models.ForeignKey(Agent, on_delete= models.CASCADE,related_name="tokens")
+    created_at = models.DateTimeField(auto_now_add = True)
+
+    def __str__(self) : 
+        return self.user.username
 
     
 
