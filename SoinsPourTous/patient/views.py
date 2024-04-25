@@ -30,8 +30,6 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.models import  User
 
 
-
-
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
 def request_otp(request):

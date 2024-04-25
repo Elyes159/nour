@@ -1,92 +1,86 @@
-from typing import __all__
 from django.contrib import admin
-from django.contrib.admin import register
+from .models import Hopital, Service, Grade, Groupe, Specialite, Medecin, Gouvernorat, Nationality, User1, Otp, Token, TokenForDoctor, PasswordResetToken, Room, Message, PageAcceuil, RendezVous, Agent, TokenForAgent, payment
 
-from patient.models import  Agent, Medecin, Otp, PageAcceuil, PasswordResetToken, RendezVous,  Token, TokenForAgent, TokenForDoctor, User1,Message,Room
-# Register your models here.
+# Enregistrement des modèles dans l'interface d'administration
 
+@admin.register(Hopital)
+class HopitalAdmin(admin.ModelAdmin):
+    list_display = ['id', 'nom', 'adresse']
 
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ['id', 'service', 'hopitale']
 
-@register(User1)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ['email','phone','fullname','created_at']
-@register(RendezVous)
-class RAdmin(admin.ModelAdmin):
-    list_display = ['date_rendez_vous','medecin','patient']
+@admin.register(Grade)
+class GradeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'gradee']
 
-    
-@register(Medecin)
-class MedecinAdmin(admin.ModelAdmin) : 
-    list_display = ['id','username']
+@admin.register(Groupe)
+class GroupeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'groupe', 'tarif']
 
-@register(Otp)
-class OtpAdmin(admin.ModelAdmin) : 
-    list_display = ['phone', 'otp','validity','verified']
+@admin.register(Specialite)
+class SpecialiteAdmin(admin.ModelAdmin):
+    list_display = ['id', 'specialite', 'service']
 
-@register(Token)
-class TokenAdmin(admin.ModelAdmin) : 
-    list_display = ['token','user','created_at']
-    
-    
-@register(TokenForDoctor)
-class TokenAdmin(admin.ModelAdmin) : 
-    list_display = ['token','user','created_at']
+@admin.register(Medecin)
+class MedecinAdmin(admin.ModelAdmin):
+    list_display = ['id', 'username', 'groupe', 'grade', 'sepcialite', 'service']
 
+@admin.register(Gouvernorat)
+class GouvernoratAdmin(admin.ModelAdmin):
+    list_display = ['id', 'options']
 
-@register(TokenForAgent)
-class TokenAdmin(admin.ModelAdmin) : 
-    list_display = ['token','user','created_at']
+@admin.register(Nationality)
+class NationalityAdmin(admin.ModelAdmin):
+    list_display = ['id', 'nationality']
 
+@admin.register(User1)
+class User1Admin(admin.ModelAdmin):
+    list_display = ['id', 'email', 'username', 'phone', 'fullname', 'adresse', 'created_at', 'gouvernorat', 'nationalite', 'sexe', 'image', 'date_naiss']
 
-@register(PasswordResetToken)
-class PasswordResetTokenAdmin(admin.ModelAdmin) : 
-    list_display=['token','user','created_at']
-    
-    
-@register(Message)
-class MessageAdmin(admin.ModelAdmin):
-    list_display = ['value','date','user','room']
-    
+@admin.register(Otp)
+class OtpAdmin(admin.ModelAdmin):
+    list_display = ['phone', 'otp', 'validity', 'verified']
 
-@register(Room)
+@admin.register(Token)
+class TokenAdmin(admin.ModelAdmin):
+    list_display = ['token', 'user', 'created_at']
+
+@admin.register(TokenForDoctor)
+class TokenForDoctorAdmin(admin.ModelAdmin):
+    list_display = ['token', 'user', 'created_at']
+
+@admin.register(PasswordResetToken)
+class PasswordResetTokenAdmin(admin.ModelAdmin):
+    list_display = ['token', 'user', 'validity', 'created_at']
+
+@admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
     list_display = ['code']
 
-@register(Agent)
-class RoomAdmin(admin.ModelAdmin):
-    list_display = ['username','password']
+@admin.register(Message)
+class MessageAdmin(admin.ModelAdmin):
+    list_display = ['value', 'date', 'user', 'room']
 
-@register(PageAcceuil)
+@admin.register(PageAcceuil)
 class PageAcceuilAdmin(admin.ModelAdmin):
-    list_display = ['postwithimage','postwithtet']
+    list_display = ['postwithimage', 'postwithtet']
 
-# class ProductOptionInline(admin.TabularInline) : 
-#     list  = ['id','product','option','quantity']
-#     model = ProductOption
+@admin.register(RendezVous)
+class RendezVousAdmin(admin.ModelAdmin):
+    list_display = ['date_rendez_vous', 'patient', 'medecin']
 
+@admin.register(Agent)
+class AgentAdmin(admin.ModelAdmin):
+    list_display = ['id_agent', 'username', 'password']
 
-# @register(Product)
-# class ProductAdmin(admin.ModelAdmin):
+@admin.register(TokenForAgent)
+class TokenForAgentAdmin(admin.ModelAdmin):
+    list_display = ['token', 'user', 'created_at']
 
-#     inlines = [ProductOptionInline]
+@admin.register(payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ['id', 'patient', 'date']
 
-#     list_display  = ['id','category','title','price','offer_price','delivery_charge','cod','created_at','updated_at']
-
-
-# class ProductImageInline(admin.TabularInline) : 
-#     list = ['image','position']
-#     model = ProductImage
-
-
-# @register(ProductOption)
-# class ProductOptionAdmin(admin.ModelAdmin):
-#     inlines = [ProductImageInline]
-#     list_display=['id','product','option','quantity']
-
-
-# @register(PageItem)
-# class PageItemAdmin(admin.ModelAdmin):
-#     list_display=['id','title','position','image','category','viewtype']
-
-
-
+# Enregistrez les autres modèles de la même manière
