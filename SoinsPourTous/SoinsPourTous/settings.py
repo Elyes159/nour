@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import multiprocessing
 import os
 from pathlib import Path
 
@@ -31,6 +32,7 @@ ALLOWED_HOSTS = ['192.168.1.188', '127.0.0.1', 'localhost','10.0.2.15','10.0.2.1
 
 # Application definition
 
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,8 +43,17 @@ INSTALLED_APPS = [
     'rest_framework',
     'patient',
     'corsheaders',
+    'background_task',
+    
+    
 ]
+BACKGROUND_TASK_RUN_ASYNC = True
+BACKGROUND_TASK_ASYNC_THREADS = multiprocessing.cpu_count()
 
+
+CELERY_TIMEZONE = "Australia/Tasmania"
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

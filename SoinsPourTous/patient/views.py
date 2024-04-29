@@ -6,8 +6,8 @@ from django.http import HttpResponse, HttpResponseServerError, JsonResponse
 from django.shortcuts import get_object_or_404,redirect
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication
-from patient.models import  Otp, PasswordResetToken, Token, User1,Message
-from patient.utils import IsAuthenticatedUser, send_otp, send_password_reset_email, token_response, token_response_Agent, token_response_doctor
+from patient.models import  Otp, PasswordResetToken, Token, User1,Message,Payment
+from patient.utils import IsAuthenticatedUser, new_token, send_otp, send_password_reset_email, token_response, token_response_Agent, token_response_doctor
 from rest_framework.parsers import FormParser
 from rest_framework.decorators import api_view
 from django.contrib.auth.hashers import make_password,check_password
@@ -187,7 +187,7 @@ def login(request):
     
     
     
-from .models import Agent, Medecin, PageAcceuil, RendezVous, Room, TokenForAgent, TokenForDoctor  # Importez le modèle Medecin
+from .models import Agent, Apc, Grade, Groupe, Medecin, PageAcceuil, RendezVous, Room, Service, Specialite, TokenForAgent, TokenForDoctor  # Importez le modèle Medecin
   
     
 @csrf_exempt 
@@ -518,6 +518,26 @@ def getProfileDoctor(request, token):
             return JsonResponse({"error": "Token invalide"}, status=400)
         
         
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getProfileAgent(request, token):
+    token_obj = TokenForAgent.objects.filter(token=token).first()
+    if request.method == 'GET':
+        if token_obj:
+            user_obj = token_obj.user
+       
+            username_patient = user_obj.username
+
+            
+            user_data = {
+                'username': username_patient,
+            }
+
+            # Retour des données sous forme de réponse JSON
+            return JsonResponse(user_data)
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+        
         
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication, BasicAuthentication])
@@ -554,6 +574,382 @@ def getRendezVousPatient(request, token):
             return JsonResponse(user_data)
         else:
             return JsonResponse({"error": "Token invalide"}, status=400)
+        
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def getPaiementHistorique(request, token):
+    token_obj = Token.objects.filter(token=token).first()
+    if request.method == 'GET':
+        if token_obj:
+            user_obj = token_obj.user
+            username_email = user_obj.email
+            paiements = Payment.objects.filter(patient__email = username_email )
+            
+            paiements_data = []
+            for paiement in paiements:
+                # Ajouter les données du paiement à la liste
+                paiement_data = {
+                    "montant": paiement.payé,
+                    "date": paiement.date,  # Convertir la date en format string
+                    # Ajoutez d'autres champs de paiement si nécessaire
+                }
+                paiements_data.append(paiement_data)
+            
+            # Renvoyer la liste des paiements sous forme de réponse JSON
+            return JsonResponse(paiements_data, safe=False)
+        else:
+            return JsonResponse({"error": "Token invalide"}, status=400)
+
+from django.core.mail import send_mail
+from celery import shared_task
+
+
+@shared_task
+def envoyer_rappel_rendez_vous(request):
+    aujourd_hui = timezone.now().date()
+    demain = aujourd_hui + timezone.timedelta(days=1)
+
+    rendez_vous_demain = RendezVous.objects.filter(date_rendez_vous=demain)
+
+    for rendez_vous in rendez_vous_demain:
+        # Récupérez l'objet patient individuel
+        patient = rendez_vous.patient
+
+        message = f"""
+        Rappel de rendez-vous:
+
+        Patient: {patient.username}
+        Médecin: {rendez_vous.medecin.username}
+        Date: {rendez_vous.date_rendez_vous}
+
+        N'oubliez pas votre rendez-vous !
+        """
+
+        send_mail(
+            "Rappel de rendez-vous",
+            message,
+            "elyesmlik307@gmail.com",
+            [patient.email],
+            fail_silently=False
+        )
+
+        data = {
+            "message": message
+        }
+
+        return JsonResponse(data)
+
+    data = {
+        "message": "Aucun rendez-vous n'est prévu pour demain."
+    }
+    return JsonResponse(data)
+
+from django.db.models import Count
+
+
+from django.db.models import Count
+from datetime import datetime
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def suivi_apc(request, token):
+    if request.method == 'POST':
+        token = TokenForDoctor.objects.filter(token=token).first()
+        if token:
+            month = request.data.get("month")
+            month_date = datetime.strptime(month, "%Y-%m")
+            
+            rendez_vous = RendezVous.objects.filter(date_rendez_vous__year=month_date.year,
+                                                     date_rendez_vous__month=month_date.month)
+            apc = Apc.objects.filter(date__year=month_date.year,
+                                     date__month=month_date.month)
+            
+            total_patients = rendez_vous.aggregate(num_patients=Count('patient'))['num_patients'] + \
+                             apc.aggregate(num_patients=Count('patient'))['num_patients']
+            
+           
+            rendez_vous_list = [rv.id for rv in rendez_vous]
+            apc_list = [a.id for a in apc]
+            
+            return Response({
+                'rendez_vous': rendez_vous_list,
+                'apc': apc_list,
+                'total_patients': total_patients
+            })
+            
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def gestion_agent(request, token):
+    if request.method == "POST":
+        token_agent = TokenForAgent.objects.filter(token=token).first()
+        agent = token_agent.user
+        if agent:
+            hopital = agent.hopital
+            services = Service.objects.filter(hopitale=hopital)
+
+            specialites = Specialite.objects.filter(service__in=services)
+
+            medecins = Medecin.objects.filter(hopitale=hopital)
+
+           
+            groupes = list(medecins.values_list('groupe__groupe', flat=True))
+
+            return Response({
+                'services': [service.service for service in services],
+                'specialites': [specialite.specialite for specialite in specialites],
+                'grades': [medecin.grade.gradee for medecin in medecins],  # Access gradee field
+                'groupes': groupes
+            })
+        else:
+            return Response({'message': 'Agent non trouvé'}, status=400)
+        
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def delete_service(request, token,id):
+    if request.method == "DELETE":
+        service = get_object_or_404(Service,pk=id)
+        token_agent = TokenForAgent.objects.filter(token = token).first()
+        agent = token_agent.user
+        if service.hopitale.id == agent.hopital.id:  # Check if agent belongs to the same hospital
+            service.delete()
+            return Response({'message': 'Service supprimé avec succès'})
+        else:
+            return Response({'message': 'Vous ne pouvez pas supprimer un service d\'un autre hôpital'}, status=403)
+        
+        
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def delete_specialite(request, token,id):
+    if request.method == "DELETE":
+        specialite = get_object_or_404(Specialite, pk=id)
+        token_agent = TokenForAgent.objects.filter(token = token).first()
+        agent = token_agent.user
+        if specialite.service.hopitale.id == agent.hopital.id:
+            specialite.delete()
+            return Response({'message': 'Spécialité supprimée avec succès'})
+        else:
+            return Response({'message': 'Vous ne pouvez pas supprimer une spécialité d\'un autre hôpital'}, status=403)
+        
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def delete_medecin(request, token,id):
+    if request.method == "DELETE":
+        medecin = get_object_or_404(Medecin, pk=id)
+        token_agent = TokenForAgent.objects.filter(token = token).first()
+        agent = token_agent.user
+        if medecin.hopitale.id == agent.hopital.id:
+            medecin.delete()
+            return Response({'message': 'Médecin supprimé avec succès'})
+        else:
+            return Response({'message': 'Vous ne pouvez pas supprimer un médecin d\'un autre hôpital'}, status=403)
+        
+from rest_framework import viewsets, permissions
+from .models import Hopital, Service, Specialite, Medecin, Agent, TokenForAgent
+from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def add_service(request, token):
+    if request.method == "POST":
+        token_agent = TokenForAgent.objects.filter(token=token).first()
+        agent = token_agent.user
+        if agent:
+            hopital = agent.hopital
+            data = request.data
+
+            service_name = data.get('service')
+            if not service_name:
+                return Response({'message': 'Le nom du service est obligatoire'}, status=400)
+
+            # Check if service with the same name already exists in the hospital
+            existing_service = Service.objects.filter(hopitale=hopital, service=service_name ).first()
+            if existing_service:
+                return Response({'message': 'Un service avec ce nom existe déjà dans cet hôpital'}, status=400)
+
+            # Create the new service
+            new_service = Service.objects.create(hopitale=hopital, service=service_name)
+            return Response({'message': 'Service ajouté avec succès', 'service': new_service.id})
+        else:
+            return Response({'message': 'Agent non trouvé'}, status=400)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def add_specialite(request, token):
+    if request.method == "POST":
+        token_agent = TokenForAgent.objects.filter(token=token).first()
+        agent = token_agent.user
+        if agent:
+            hopital = agent.hopital
+            data = request.data
+
+            service_id = data.get('service')
+            specialite_name = data.get('specialite')
+
+            if not service_id or not specialite_name:
+                return Response({'message': 'Le service et la spécialité sont obligatoires'}, status=400)
+
+            # Get the service object
+            service = get_object_or_404(Service, pk=service_id, hopitale=hopital)
+
+            # Check if specialty with the same name already exists in the service
+            existing_specialite = Specialite.objects.filter(service=service, specialite=specialite_name).first()
+            if existing_specialite:
+                return Response({'message': 'Une spécialité avec ce nom existe déjà dans ce service'}, status=400)
+
+            # Create the new specialty
+            new_specialite = Specialite.objects.create(service=service, specialite=specialite_name)
+            return Response({'message': 'Spécialité ajoutée avec succès', 'specialite': new_specialite.id})
+        else:
+            return Response({'message': 'Agent non trouvé'}, status=400)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def add_medecin(request, token):
+    if request.method == "POST":
+        token_agent = TokenForAgent.objects.filter(token=token).first()
+        agent = token_agent.user
+        if agent:
+            hopital = agent.hopital
+            data = request.data
+
+            groupe_id = data.get('groupe')
+            grade_id = data.get('grade')
+            specialite_id = data.get('specialite')
+            service_id = data.get('service')
+            username = data.get('username')
+            password = data.get('password')
+
+            if not (groupe_id and grade_id and specialite_id and service_id and username and password):
+                return Response({'message': 'Tous les champs obligatoires ne sont pas renseignés'}, status=400)
+
+            try:
+                # Check for missing service
+                if not service_id:
+                    return Response({'message': 'Le service est obligatoire'}, status=400)
+
+                # Get the groupe, grade, specialite, and service objects
+                groupe = Groupe.objects.get(pk=groupe_id)
+                grade = Grade.objects.get(pk=grade_id)
+                specialite = Specialite.objects.get(pk=specialite_id)
+                service = Service.objects.get(pk=service_id)
+
+                if groupe and grade and specialite and service:
+                    doctor = Medecin.objects.create(
+                        username=username,
+                        password=password,
+                        hopitale=hopital,
+                        groupe=groupe,
+                        grade=grade,
+                        sepcialite=specialite,
+                        service=service  # Assign the retrieved service object
+                    )
+                    return Response({'message': 'Médecin ajouté avec succès', 'medecin': doctor.id})
+            except (Groupe.DoesNotExist, Grade.DoesNotExist, Specialite.DoesNotExist, Service.DoesNotExist):
+                return Response({'message': 'Groupe, grade, spécialité ou service introuvable'}, status=400)
+            except Exception as e:  # Catch other potential errors
+                return Response({'message': f'Une erreur est survenue: {str(e)}'}, status=500)
+
+        else:
+            return Response({'message': 'Agent non trouvé'}, status=400)
+        
+        
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def modify_medecin(request, token):
+    if request.method == "POST":
+        token_agent = TokenForAgent.objects.filter(token=token).first()
+        agent = token_agent.user
+        if agent:
+            hopital = agent.hopital
+            data = request.data
+
+            medecin_id = data.get('medecin')
+            garde_id = data.get('garde')
+            groupe_id = data.get('groupe')
+            username = data.get('username')
+
+            if not (medecin_id and (garde_id or groupe_id or username)):
+                return Response({'message': 'Veuillez renseigner au moins un champ à modifier'}, status=400)
+
+            try:
+                # Get the doctor object
+                medecin = Medecin.objects.get(pk=medecin_id)
+
+                # Check if the doctor belongs to the agent's hospital
+                if medecin.hopitale != hopital:
+                    return Response({'message': 'Vous ne pouvez pas modifier un médecin d\'un autre hôpital'}, status=400)
+
+                # Update fields based on provided values
+                if garde_id:
+                    medecin.garde_id = garde_id
+                if groupe_id:
+                    medecin.groupe_id = groupe_id
+                if username:
+                    medecin.username = username
+
+                medecin.save()
+                return Response({'message': 'Médecin modifié avec succès'})
+            except Medecin.DoesNotExist:
+                return Response({'message': 'Médecin introuvable'}, status=400)
+            except Exception as e:
+                return Response({'message': f'Une erreur est survenue: {str(e)}'}, status=500)
+
+        else:
+            return Response({'message': 'Agent non trouvé'}, status=400)
+
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication, BasicAuthentication])
+def get_agent_rendezvous_apc(request, token):
+    if request.method == "GET":
+        token_agent = TokenForAgent.objects.filter(token=token).first()
+        agent = token_agent.user
+        if agent:
+            hopital = agent.hopital
+
+            # Get all appointments for the agent's hospital
+            rendez_vous = RendezVous.objects.filter(medecin__hopitale=hopital)
+            apc = Apc.objects.filter(medecin__hopitale=hopital)
+
+            # Prepare data for response
+            rendez_vous_data = []
+            for rv in rendez_vous:
+                rendez_vous_data.append({
+                    "id": rv.id,
+                    "date_rendez_vous": rv.date_rendez_vous.strftime("%Y-%m-%d"),  # Format date
+                    "patient": rv.patient.username,  # Assuming username for patient identification
+                    "medecin": rv.medecin.username,  # Assuming username for doctor identification
+                })
+
+            apc_data = []
+            for a in apc:
+                apc_data.append({
+                    "id": a.id,
+                    "date": a.date.strftime("%Y-%m-%d %H:%M:%S"),  # Format date and time
+                    "patient": a.patient.username,  # Assuming username for patient identification
+                    "medecin": a.medecin.username,  # Assuming username for doctor identification
+                })
+
+            return Response({
+                "rendez_vous": rendez_vous_data,
+                "apc": apc_data,
+            })
+        else:
+            return Response({'message': 'Agent non trouvé'}, status=400)
+
+
+
+
+
+
+
+        
+       
+
 
             
     

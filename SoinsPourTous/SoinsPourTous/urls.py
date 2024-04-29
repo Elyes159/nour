@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from patient.views import  ajout_rendez_vous_par_agent, checkview, create_account, getProfileDoctor, getProfilePatient, getmessage, login, login_pour_agent, login_pour_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, user1Data, verify_otp,password_reset_email ,send,getPageAcceuil
+from patient.views import  add_medecin, add_service, add_specialite, ajout_rendez_vous_par_agent, checkview, create_account, delete_medecin, delete_service, delete_specialite, envoyer_rappel_rendez_vous, gestion_agent, get_agent_rendezvous_apc, getPaiementHistorique, getProfileAgent, getProfileDoctor, getProfilePatient, getmessage, login, login_pour_agent, login_pour_medecin, modify_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, suivi_apc, user1Data, verify_otp,password_reset_email ,send,getPageAcceuil
 from SoinsPourTous import settings
 from django.conf.urls.static import static
 urlpatterns = [
@@ -39,7 +39,22 @@ urlpatterns = [
     path('ajoutRendezVousParAgent/<token>/',ajout_rendez_vous_par_agent),
     path('getpageacceuil/<str:token>/',getPageAcceuil),
     path('getProfilePatient/<token>/',getProfilePatient),
-    path('getProfileDoctor/<token>/',getProfileDoctor)
+    path('getProfileDoctor/<token>/',getProfileDoctor),
+    path('envoyer_rappel_rendez_vous/', envoyer_rappel_rendez_vous, name='envoyer_rappel_rendez_vous'),
+    path('getpaiementHistorique/<token>/',getPaiementHistorique),
+    path('agentprofile/<token>/',getProfileAgent),
+    path('suivi_apc/<token>/',suivi_apc),
+    path('gestionagent/<token>/',gestion_agent),
+    path('delete_service/<token>/<id>/', delete_service, name='delete_service'),
+    path('delete_specialite/<token>/<id>/', delete_specialite, name='delete_specialite'),
+    path('delete_medecin/<token>/<id>/', delete_medecin, name='delete_medecin'),
+    path('add_service/<token>/', add_service, name='add_service'),
+    path('add_specialite/<token>/', add_specialite, name='add_specialite'),
+    path('add_medecin/<token>/', add_medecin, name='add_medecin'),
+    path('modify_medecin/<int:token>/', modify_medecin, name='modify_medecin'),
+    path('get_agent_rendezvous_apc/<int:token>/',get_agent_rendezvous_apc, name='get_agent_rendezvous_apc'),
+
+
     
 
 ]

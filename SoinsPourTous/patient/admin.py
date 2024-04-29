@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Hopital, Service, Grade, Groupe, Specialite, Medecin, Gouvernorat, Nationality, User1, Otp, Token, TokenForDoctor, PasswordResetToken, Room, Message, PageAcceuil, RendezVous, Agent, TokenForAgent, payment
+from .models import Hopital, Service, Grade, Groupe, Specialite, Medecin, Gouvernorat, Nationality, User1, Otp, Token, TokenForDoctor, PasswordResetToken, Room, Message, PageAcceuil, RendezVous, Agent, TokenForAgent, Payment
 
 # Enregistrement des modèles dans l'interface d'administration
 
@@ -79,7 +79,7 @@ class AgentAdmin(admin.ModelAdmin):
 class TokenForAgentAdmin(admin.ModelAdmin):
     list_display = ['token', 'user', 'created_at']
 
-@admin.register(payment)
+@admin.register(Payment)
 class PaymentAdmin(admin.ModelAdmin):
     list_display = ['id', 'patient', 'date']
 

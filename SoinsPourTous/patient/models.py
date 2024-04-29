@@ -10,14 +10,14 @@ from datetime import datetime
 
 
 class Hopital(models.Model) : 
-    id = models.CharField(max_length=1000,unique=True,primary_key=True)
+    id = models.CharField(max_length=1000,unique=True,primary_key=True,default=uuid.uuid4)
     nom = models.CharField(max_length=100)
     adresse = models.CharField(max_length=100)
     def __str__(self) : 
         return self.nom
     
 class Service(models.Model) : 
-    id = models.CharField(max_length=1000,unique=True,primary_key=True)
+    id = models.CharField(max_length=1000,default=uuid.uuid4, editable=False,primary_key=True)
     service = models.CharField(max_length=100)
     hopitale = models.ForeignKey(Hopital, on_delete= models.CASCADE,related_name="hop")
 
@@ -25,19 +25,19 @@ class Grade(models.Model) :
     id = models.CharField(max_length=1000,unique=True,primary_key=True)
     gradee = models.CharField(max_length=100)
     def __str__(self) : 
-        return self.grade
+        return self.gradee
 class Groupe(models.Model) : 
-    id = models.CharField(max_length=1000,unique= True,primary_key=True)
+    id = models.CharField(max_length=1000,unique= True,primary_key=True,default=uuid.uuid4)
     groupe = models.CharField(max_length=100)
     tarif = models.DecimalField(max_digits=5,decimal_places=5)
     def __str__(self) : 
         return self.groupe
 class Specialite(models.Model) : 
-    id = models.CharField(max_length=1000,unique= True,primary_key=True)
+    id = models.CharField(max_length=1000,primary_key=True,default=uuid.uuid4)
     specialite = models.CharField(max_length=100)
     service = models.ForeignKey(Service,on_delete= models.CASCADE,related_name="serv")
 class Medecin(models.Model):
-    id = models.CharField(max_length=50,unique=True,primary_key=True)
+    id = models.CharField(max_length=50,unique=True,primary_key=True,default=uuid.uuid4)
     groupe = models.ForeignKey(Groupe, on_delete= models.CASCADE,related_name="group")
     grade = models.ForeignKey(Grade, on_delete= models.CASCADE,related_name="grade")
     username = models.CharField(max_length=50)
@@ -48,7 +48,7 @@ class Medecin(models.Model):
     def __str__(self) : 
         return self.username
 class Gouvernorat(models.Model):
-    id = models.CharField(unique=True,max_length=1000000,primary_key=True)
+    id = models.CharField(unique=True,max_length=1000000,primary_key=True,default=uuid.uuid4)
     options = models.CharField(max_length=255, choices=[
         ('Ariana', 'Ariana'),
         ('Béja', 'Béja'),
@@ -76,11 +76,11 @@ class Gouvernorat(models.Model):
         ('Zaghouan', 'Zaghouan'),
     ])
 class Nationality(models.Model) : 
-    id = models.CharField(unique=True,max_length=1000,primary_key=True)
+    id = models.CharField(unique=True,max_length=1000,primary_key=True,default=uuid.uuid4)
     nationality = models.CharField(max_length=40)
 
 class User1( models.Model) : 
-    id = models.CharField(unique=True,max_length=1000000,primary_key=True)
+    id = models.CharField(unique=True,max_length=1000000,primary_key=True,default=uuid.uuid4)
     email = models.EmailField(unique=True)
     username = models.CharField(max_length=50)
     phone = models.CharField(max_length = 10)
@@ -90,7 +90,7 @@ class User1( models.Model) :
     created_at = models.DateTimeField(auto_now_add = True)
     gouvernorat = models.ForeignKey(Gouvernorat, on_delete= models.CASCADE,related_name="gouv")
     nationalite = models.ForeignKey(Nationality, on_delete= models.CASCADE,related_name="nat")
-    sexe = models.CharField(max_length=5)
+    sexe = models.CharField(max_length=5),
     image = models.ImageField(upload_to='categories/')
     date_naiss = models.DateField()
     def __str__(self) : 
@@ -153,17 +153,18 @@ class PageAcceuil(models.Model) :
     
     
 class RendezVous(models.Model) : 
-    id = models.CharField(unique=True,max_length=1000,primary_key=True)
+    id = models.CharField(unique=True,max_length=1000,primary_key=True,default=uuid.uuid4)
     date_rendez_vous = models.DateField()
-    patient = models.CharField(max_length =  100)
-    medecin = models.CharField(max_length =  100)
+    patient = models.ForeignKey(User1,on_delete= models.CASCADE,related_name="poiatt")
+    medecin = models.ForeignKey(Medecin,on_delete= models.CASCADE,related_name="mesdd")
 
 
     
 class Agent(models.Model) : 
-    id_agent =  models.CharField(max_length=1000,unique=True)
+    id_agent =  models.CharField(max_length=1000,unique=True,default=uuid.uuid4)
     username = models.CharField(max_length=50)
     password = models.CharField(max_length=1000)
+    hopital = models.ForeignKey(Hopital, on_delete= models.CASCADE,related_name="hopagent")
 
 
 class TokenForAgent(models.Model) : 
@@ -174,13 +175,14 @@ class TokenForAgent(models.Model) :
     def __str__(self) : 
         return self.user.username
     
-class payment (models.Model) : 
-    id = models.CharField(unique=True,max_length=1000,primary_key=True)
+class Payment (models.Model) : 
+    id = models.CharField(unique=True,max_length=1000,primary_key=True,default=uuid.uuid4)
     patient = models.ForeignKey(User1, on_delete= models.CASCADE,related_name="pay")
     date = models.DateField(auto_now_add=True)
+    payé = models.DecimalField(max_digits=2,decimal_places=2)
     
 class Apc(models.Model) : 
-    id = models.CharField(unique=True,max_length=1000,primary_key=True)
+    id = models.CharField(unique=True,max_length=1000,primary_key=True,default=uuid.uuid4)
     date = models.DateTimeField()
     medecin = models.ForeignKey(Medecin,on_delete= models.CASCADE,related_name="medd")
     patient = models.ForeignKey(User1,on_delete= models.CASCADE,related_name="patt")
