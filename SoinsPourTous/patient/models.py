@@ -139,6 +139,8 @@ class PasswordResetToken(models.Model) :
     
 class Room (models.Model) : 
     code = models.CharField(max_length=100,unique=True)
+    patient = models.ForeignKey(User1, on_delete=models.CASCADE, related_name='room')
+    medecin = models.ForeignKey(Medecin, on_delete=models.CASCADE, related_name='roommed')
     
 class Message(models.Model):
     value = models.CharField(max_length=1000000)
@@ -154,7 +156,7 @@ class PageAcceuil(models.Model) :
     
 class RendezVous(models.Model) : 
     id = models.CharField(unique=True,max_length=1000,primary_key=True,default=uuid.uuid4)
-    date_rendez_vous = models.DateField()
+    date_rendez_vous = models.DateTimeField()
     patient = models.ForeignKey(User1,on_delete= models.CASCADE,related_name="poiatt")
     medecin = models.ForeignKey(Medecin,on_delete= models.CASCADE,related_name="mesdd")
 

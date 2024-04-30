@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from patient.views import  add_medecin, add_service, add_specialite, ajout_rendez_vous_par_agent, checkview, create_account, delete_medecin, delete_service, delete_specialite, envoyer_rappel_rendez_vous, gestion_agent, get_agent_rendezvous_apc, getPaiementHistorique, getProfileAgent, getProfileDoctor, getProfilePatient, getmessage, login, login_pour_agent, login_pour_medecin, modify_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, suivi_apc, user1Data, verify_otp,password_reset_email ,send,getPageAcceuil
+from patient.views import  add_medecin, add_service, add_specialite, ajout_rendez_vous_par_agent, checkview, create_account, delete_medecin, delete_service, delete_specialite, deleteRendezVousA, deleteRendezVousD, envoyer_rappel_rendez_vous, gestion_agent, get_agent_rendezvous_apc, getApcForAgent, getChatMedecin, getChatPatient, getPaiementHistorique, getProfileAgent, getProfileDoctor, getProfilePatient, getRendezVousHDoctor, getRendezVousHPatient, getRendezVousPatient, getmessage, login, login_pour_agent, login_pour_medecin, logout_Agent, logout_medecin, logout_patient, modify_medecin, password_reset_confirm, password_reset_form, password_updated, request_otp, resend_otp, suivi_apc, updateRendezVousDateA, updateRendezVousDateD, user1Data, verify_otp,password_reset_email ,send,getPageAcceuil
 from SoinsPourTous import settings
 from django.conf.urls.static import static
 urlpatterns = [
@@ -53,6 +53,20 @@ urlpatterns = [
     path('add_medecin/<token>/', add_medecin, name='add_medecin'),
     path('modify_medecin/<int:token>/', modify_medecin, name='modify_medecin'),
     path('get_agent_rendezvous_apc/<int:token>/',get_agent_rendezvous_apc, name='get_agent_rendezvous_apc'),
+    path('getPatientRdvH/<token>/',getRendezVousHPatient),
+    path("getPatientRdv/<token>/",getRendezVousPatient),
+    path("getRdvHDoctor/<token>/",getRendezVousHDoctor),
+    path("updateRdvDateDoctor/<token>/<rendez_vous_id>/",updateRendezVousDateD),
+    path("updateRdvDateAgent/<token>/<rendez_vous_id>/",updateRendezVousDateA),
+    path("deleteRendezVousDoctor/<token>/<rendez_vous_id>/",deleteRendezVousD),
+    path("deleteRendezVousAgent/<token>/<rendez_vous_id>/",deleteRendezVousA),
+    path("getApcForAgent/<token>/",getApcForAgent),
+    path("logoutAgent/<token>/",logout_Agent),
+    path("logoutMedecin/<token>/",logout_medecin),
+    path("logoutPatient/<token>/",logout_patient),
+    path('getPatientRooms/<token>/',getChatPatient),
+    path('getMedecinRooms/<token>/',getChatMedecin),
+    
 
 
     

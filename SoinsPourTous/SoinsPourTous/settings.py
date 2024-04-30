@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'patient',
     'corsheaders',
     'background_task',
+    'channels',
+    'channels.layers',
+    'channels.routing',
     
     
 ]
